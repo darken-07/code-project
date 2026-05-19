@@ -1,0 +1,130 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>暖心小纸条</title>
+<style>
+  :root{--bg1:#ffe8e8;--bg2:#fff7f0}
+  html,body{height:100%;margin:0;font-family:"Segoe UI",Tahoma,Arial;background:linear-gradient(135deg,var(--bg1),var(--bg2));overflow:hidden}
+  .scene{position:relative;width:100%;height:100%}
+  .note{
+    position:absolute;min-width:160px;max-width:240px;padding:12px 14px;border-radius:10px;
+    background:linear-gradient(180deg,rgba(255,255,255,0.95),rgba(255,250,240,0.9));
+    box-shadow:0 8px 18px rgba(0,0,0,0.12);color:#333;font-size:16px;line-height:1.3;
+    transform-origin:center center;cursor:pointer;user-select:none;
+    transition:transform .18s ease,box-shadow .18s;
+  }
+  .note:hover{transform:translateY(-6px) scale(1.03);box-shadow:0 14px 28px rgba(0,0,0,0.18)}
+  @keyframes bob {
+    0%{transform:translateY(0) rotate(-2deg) scale(1)}
+    50%{transform:translateY(-14px) rotate(2deg) scale(1.03)}
+    100%{transform:translateY(0) rotate(-2deg) scale(1)}
+  }
+  .note.bob{animation: bob 3s ease-in-out infinite}
+  .controls{position:fixed;left:12px;top:12px;display:flex;gap:8px;z-index:999}
+  .btn{background:#fff;border:none;padding:8px 12px;border-radius:8px;box-shadow:0 6px 14px rgba(0,0,0,0.08);cursor:pointer;font-weight:600}
+  .hint{position:fixed;right:12px;top:12px;background:rgba(255,255,255,0.85);padding:8px 10px;border-radius:8px;box-shadow:0 6px 14px rgba(0,0,0,0.08)}
+  .credit{position:fixed;left:12px;bottom:10px;color:#5a5a5a;font-size:13px}
+</style>
+</head>
+<body>
+<div class="scene" id="scene"></div>
+
+<div class="controls">
+  <button class="btn" id="playBtn">播放音乐</button>
+  <button class="btn" id="regenBtn">再来一波纸条</button>
+</div>
+<div class="hint">点纸条即可轻触收藏 / 双击让它消失</div>
+<div class="credit">愿你被温柔以待 • 保存此页以随时打开</div>
+
+<audio id="bgAudio" loop crossorigin="anonymous">
+  <!-- 若需在线背景音乐，可替换下面src为你自己的MP3链接 -->
+  <source src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_6b9b7d3a7b.mp3?filename=calm-piano-110219.mp3" type="audio/mpeg">
+  你的浏览器不支持音频元素。
+</audio>
+
+<script>
+const messages = [
+  "今天也要好好照顾自己哦。",
+  "吃饭了吗？记得补充能量。",
+  "哪怕慢一点，也是向前。",
+  "你已经很努力了，我为你骄傲。",
+  "给自己一个小小的奖励吧。",
+  "遇到难事，深呼吸再来一次。",
+  "不必着急，一切会慢慢好起来。",
+  "请允许自己休息和放松。",
+  "你值得被温柔对待。",
+  "我在这儿，愿意听你说话。"
+];
+
+const scene = document.getElementById('scene');
+const playBtn = document.getElementById('playBtn');
+const regenBtn = document.getElementById('regenBtn');
+const audio = document.getElementById('bgAudio');
+
+function rand(min,max){return Math.random()*(max-min)+min}
+
+function createNote(text){
+  const d = document.createElement('div');
+  d.className = 'note bob';
+  d.textContent = text;
+  const w = rand(140,240);
+  d.style.width = w + 'px';
+  const top = rand(8,80);
+  const left = rand(4,80);
+  d.style.top = top + '%';
+  d.style.left = left + '%';
+  d.style.transform = `translateZ(0)`;
+  d.style.animationDuration = (rand(2.2,4.0)).toFixed(2)+'s';
+  d.style.animationDelay = (rand(0,2)).toFixed(2)+'s';
+  // small rotation
+  d.style.rotate = rand(-6,6).toFixed(2)+'deg';
+  // interactions
+  d.addEventListener('click', (e)=>{
+    d.classList.toggle('picked');
+    d.style.boxShadow = d.classList.contains('picked') ? '0 20px 40px rgba(0,0,0,0.22)' : '';
+    // subtle scale feedback
+    d.style.transform = 'scale(1.04)';
+    setTimeout(()=> d.style.transform = '', 160);
+  });
+  d.addEventListener('dblclick', ()=>{ d.remove(); });
+  return d;
+}
+
+function populate(count=14){
+  scene.innerHTML = '';
+  // make many notes with random messages
+  for(let i=0;i<count;i++){
+    const msg = messages[Math.floor(rand(0,messages.length))];
+    const note = createNote(msg);
+    // slight staggered entrance
+    note.style.opacity = '0';
+    note.style.transition = 'opacity .6s ease, transform .2s';
+    scene.appendChild(note);
+    setTimeout(()=>note.style.opacity='1', 50 + i*60);
+  }
+}
+
+playBtn.addEventListener('click', ()=>{
+  const p = audio.play();
+  if(p !== undefined){
+    p.then(()=>{ playBtn.textContent = '暂停音乐'; })
+     .catch(()=>{ /* autoplay blocked */ playBtn.textContent = '播放音乐'; });
+  }
+  // toggle
+  if(!audio.paused){ audio.pause(); playBtn.textContent='播放音乐'; }
+  else { audio.play(); playBtn.textContent='暂停音乐'; }
+});
+
+// try autoplay (may be blocked)
+audio.play().then(()=>{ playBtn.textContent='暂停音乐'; }).catch(()=>{ playBtn.textContent='播放音乐'; });
+
+regenBtn.addEventListener('click', ()=> populate(Math.floor(rand(10,20))));
+window.addEventListener('resize', ()=>{/* keep simple; layout uses % positions */});
+
+populate(16);
+</script>
+</body>
+</html>
