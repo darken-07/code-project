@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D 枪战游戏</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- 开始界面 -->
+    <div id="menu">
+        <div id="menu-content">
+            <h1>⚔️ 3D 枪战</h1>
+            <p class="subtitle">消灭所有敌人，生存到最后！</p>
+            <div class="controls-info">
+                <p><kbd>W A S D</kbd> 移动</p>
+                <p><kbd>鼠标</kbd> 瞄准</p>
+                <p><kbd>左键</kbd> 射击 &nbsp;|&nbsp; <kbd>R</kbd> 换弹</p>
+                <p><kbd>Shift</kbd> 奔跑 &nbsp;|&nbsp; <kbd>Space</kbd> 跳跃</p>
+                <p><kbd>1 / 2</kbd> 切换武器</p>
+                <p><kbd>Q</kbd> 切换自动/连发模式</p>
+            </div>
+            <button id="start-btn">开始游戏</button>
+        </div>
+    </div>
+
+    <!-- HUD -->
+    <div id="hud" style="display:none;">
+        <div id="crosshair">+</div>
+        <div id="health-bar">
+            <span id="health-text">💚 100</span>
+        </div>
+        <div id="ammo-display">
+            <span id="weapon-name">🔫 手枪</span>
+            <span id="ammo-text">12 / 12</span>
+        </div>
+        <div id="score-display">
+            <span>🏆 得分: <span id="score-value">0</span></span>
+        </div>
+        <div id="wave-display">
+            波次 <span id="wave-value">1</span>
+        </div>
+        <div id="kill-count">
+            💀 击杀: <span id="kill-value">0</span>
+        </div>
+        <div id="fire-mode">
+            🔫 <span id="fire-mode-text">自动</span>
+        </div>
+        <div id="game-over" style="display:none;">
+            <h1>游戏结束</h1>
+            <p>得分: <span id="final-score">0</span></p>
+            <p>击杀: <span id="final-kills">0</span></p>
+            <p>存活波次: <span id="final-wave">0</span></p>
+            <button id="restart-btn">再来一局</button>
+        </div>
+        <div id="pickup-notice" style="display:none;"></div>
+    </div>
+
+    <div id="damage-overlay"></div>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"
+        }
+    }
+    </script>
+
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>
