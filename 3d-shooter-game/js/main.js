@@ -190,8 +190,12 @@ async function startGame() {
                 : mouseClicked;
 
             if (shouldFire) {
-                const shot = player.fire();
-                if (shot) {
+                    // 获取屏幕准星瞄准方向（从相机中心）
+                    const aimDir = getAimDirection(camera);
+
+                    // 传给player.fire()，子弹从枪口出，方向沿准星
+                    const shot = player.fire(aimDir);
+                    if (shot) {
                     // 射击音效
                     audio.playShoot(player.autoFire);
 

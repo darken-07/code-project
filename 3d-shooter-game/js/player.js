@@ -88,10 +88,10 @@ export class Player {
         this.playerHeight = 1.8;
         this.playerRadius = 0.4;
 
-        // 相机参数（第三人称）
-        this.camDistance = 7;
+        // 相机参数（第三人称）——调远一点让准星不跟人物重叠
+        this.camDistance = 8;
         this.camHeight = 3.5;
-        this.camSmoothSpeed = 6;
+        this.camSmoothSpeed = 5;
 
         // 构建玩家模型
         this.group = this.buildPlayerModel();
@@ -197,8 +197,10 @@ export class Player {
         group.add(this.rightLeg);
 
         // 初始默认右臂指向正前方（持枪姿势）
-        this.rightArm.rotation.x = -0.4;
-        this.rightArm.position.z = -0.1;
+        this.rightArm.rotation.x = -0.6;
+        this.rightArm.position.z = -0.15;
+        this.rightArm.position.x = 0.55;
+        this.rightArm.position.y = 1.2;
 
         return group;
     }
@@ -335,11 +337,11 @@ export class Player {
             this.muzzleOffset = new THREE.Vector3(0, 0, -0.8);
         }
 
-        // 枪械在右手的位置偏移
-        gunGroup.position.set(0.3, 0.65, -0.25);
-        // 略微倾斜展示
-        gunGroup.rotation.x = -0.1;
-        gunGroup.rotation.z = 0.15;
+        // 枪械在右手的位置偏移（让枪在角色手上更明显）
+        gunGroup.position.set(0.4, 0.55, -0.35);
+        // 倾斜展示（枪口朝前略向下）
+        gunGroup.rotation.x = -0.25;
+        gunGroup.rotation.z = 0.2;
 
         this.gunModelOffset = gunGroup.position.clone();
     }
@@ -351,14 +353,14 @@ export class Player {
     update(dt) {
         // ---- 鼠标控制视角 ----
         const { dx, dy } = getMouseDelta();
-        const sensitivity = 0.005;
+        const sensitivity = 0.008; // 提高灵敏度
 
-        // 水平旋转玩家朝向（yaw）
+        // 水平旋转玩家朝向（yaw）- 左右转
         this.yaw -= dx * sensitivity;
 
-        // 垂直倾斜相机（pitch），范围0~60度
-        this.pitch -= dy * sensitivity * 0.8;
-        this.pitch = Math.max(0.1, Math.min(Math.PI / 3, this.pitch));
+        // 垂直倾斜相机（pitch），只控制相机俯仰，范围放更大
+        this.pitch -= dy * sensitivity * 0.6;
+        this.pitch = Math.max(0.05, Math.min(Math.PI / 2.5, this.pitch));
 
         // ---- 移动 ----
         this.isRunning = !!keys['ShiftLeft'] || !!keys['ShiftRight'];
@@ -483,16 +485,15 @@ export class Player {
     }
 
     updateArms(dt) {
-        // 右臂：持枪臂，指向角色前方（默认持枪姿势）
-        // 稍微上下调整使枪口指向视线方向
-        const pitchFactor = Math.min(this.pitch / (Math.PI / 3), 1);
-        const targetArmX = -0.4 - pitchFactor * 0.2;
+        // 右臂：持枪臂，指向角色前方（根据pitch略微调整）
+        const pitchFactor = Math.min(this.pitch / (Math.PI / 2.5), 1);
+        const targetArmX = -0.6 - pitchFactor * 0.3;
         this.rightArm.rotation.x += (targetArmX - this.rightArm.rotation.x) * dt * 10;
-        this.rightArm.position.z = -0.1 - pitchFactor * 0.05;
+        this.rightArm.position.z = -0.15 - pitchFactor * 0.1;
 
         // 左臂：自然摆动
         const leftArmSwing = Math.sin(this.walkTime * 0.8) * 0.15;
-        this.leftArm.rotation.x += (0.1 + leftArmSwing - this.leftArm.rotation.x) * dt * 10;
+        this.leftArm.rotation.x += (0.2 + leftArmSwing - this.leftArm.rotation.x) * dt * 10;
     }
 
     updateCamera(dt) {
@@ -563,7 +564,7 @@ export class Player {
         return true;
     }
 
-    fire() {
+    fire(aimDir) {
         if (!this.canFire()) return null;
         this.lastFireTime = performance.now();
         this.weapon.ammo--;
@@ -580,15 +581,26 @@ export class Player {
         // 从枪口位置发射子弹
         const gunPos = this.getGunPosition();
 
-        // 射击方向：沿着相机视线方向（带散射）
-        const spread = 0.015;
-        const dir = new THREE.Vector3(0, 0, -1);
-        const euler = new THREE.Euler(
-            this.pitch + (Math.random() - 0.5) * spread,
-            this.yaw + (Math.random() - 0.5) * spread,
-            0, 'YXZ'
-        );
-        dir.applyEuler(euler);
+        // 射击方向：如果传入了aimDir就用它（屏幕准星方向），否则用角色朝向
+        let dir;
+        if (aimDir) {
+            dir = aimDir.clone();
+            // 加一点散射
+            const spread = 0.01;
+            dir.x += (Math.random() - 0.5) * spread;
+            dir.y += (Math.random() - 0.5) * spread;
+            dir.z += (Math.random() - 0.5) * spread;
+            dir.normalize();
+        } else {
+            const spread = 0.015;
+            dir = new THREE.Vector3(0, 0, -1);
+            const euler = new THREE.Euler(
+                this.pitch + (Math.random() - 0.5) * spread,
+                this.yaw + (Math.random() - 0.5) * spread,
+                0, 'YXZ'
+            );
+            dir.applyEuler(euler);
+        }
 
         return {
             origin: gunPos,
@@ -637,9 +649,9 @@ export class Player {
     getGunPosition() {
         // 枪口位置：玩家位置 + 右臂偏移 + 枪械偏移
         const localOffset = new THREE.Vector3(
-            0.3 + this.weaponBobOffset.x,
-            1.3 + this.weaponBobOffset.y,
-            -0.5
+            0.4 + this.weaponBobOffset.x,
+            1.1 + this.weaponBobOffset.y,
+            -0.6
         );
         // 应用玩家朝向的旋转
         const worldOffset = localOffset.clone().applyQuaternion(
