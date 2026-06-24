@@ -351,7 +351,7 @@ export class Player {
     update(dt) {
         // ---- 鼠标控制视角 ----
         const { dx, dy } = getMouseDelta();
-        const sensitivity = 0.003;
+        const sensitivity = 0.005;
 
         // 水平旋转玩家朝向（yaw）
         this.yaw -= dx * sensitivity;
