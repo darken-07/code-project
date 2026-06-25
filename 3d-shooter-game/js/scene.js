@@ -52,8 +52,22 @@ export function createScene() {
     scene.add(sun);
 
     // ---- 环境微光（城市辉光） ----
-    const ambientFog = new THREE.AmbientLight(0x334466, 0.3);
+    const ambientFog = new THREE.AmbientLight(0x334466, 0.5);
     scene.add(ambientFog);
+
+    // ---- 彩色地面标记（明显的视觉变化） ----
+    const markerMat = new THREE.MeshBasicMaterial({
+        color: 0xff4444,
+        transparent: true,
+        opacity: 0.4,
+    });
+    for (let i = 0; i < 8; i++) {
+        const angle = (i / 8) * Math.PI * 2;
+        const marker = new THREE.Mesh(new THREE.RingGeometry(1.5, 2.5, 16), markerMat);
+        marker.rotation.x = -Math.PI / 2;
+        marker.position.set(Math.cos(angle) * 10, 0.08, Math.sin(angle) * 10);
+        scene.add(marker);
+    }
 
     // ---- 地面 ----
     // 创建更精细的地面：沥青底色 + 车道标记 + 纹理感
