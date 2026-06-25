@@ -182,6 +182,24 @@ async function startGame() {
         if (isKeyDown('Digit8')) weather.setWeather('snow');
 
         // ---- 更新天气（每帧，包括星空闪烁） ----
+        weather.update(dt, player.position);
+
+        // ---- 更新环境光尘粒子 ----
+        if (sceneRef.userData && sceneRef.userData.dust) {
+            const dust = sceneRef.userData.dust;
+            const pos = dust.geometry.attributes.position;
+            const array = pos.array;
+            const speeds = dust.userData.speeds;
+            for (let i = 0; i < array.length / 3; i++) {
+                array[i * 3] += speeds[i] * Math.sin(performance.now() * 0.0005 + i) * dt;
+                array[i * 3 + 1] += Math.sin(performance.now() * 0.001 + i * 0.5) * 0.003;
+                array[i * 3 + 2] += speeds[i] * Math.cos(performance.now() * 0.0005 + i) * dt;
+                if (Math.abs(array[i * 3]) > 100) array[i * 3] *= -0.9;
+                if (array[i * 3 + 1] > 20 || array[i * 3 + 1] < 0) array[i * 3 + 1] = Math.random() * 5;
+                if (Math.abs(array[i * 3 + 2]) > 100) array[i * 3 + 2] *= -0.9;
+            }
+            pos.needsUpdate = true;
+        }
 
         // ---- 射击处理 ----
         if (isLocked()) {
@@ -190,31 +208,29 @@ async function startGame() {
                 : mouseClicked;
 
             if (shouldFire) {
-                    // 获取屏幕准星瞄准方向（从相机中心）
-                    const aimDir = getAimDirection(camera);
+                // 获取屏幕准星瞄准方向（从相机中心）
+                const aimDir = getAimDirection(camera);
 
-                    // 传给player.fire()，子弹从枪口出，方向沿准星
-                    const shot = player.fire(aimDir);
-                    if (shot) {
+                // 传给player.fire()，子弹从枪口出，方向沿准星
+                const shot = player.fire(aimDir);
+                if (shot) {
                     // 射击音效
                     audio.playShoot(player.autoFire);
 
                     // 武器特效：枪口火焰、弹壳、烟雾
                     weaponFx.fire(shot.origin, shot.direction, 0.05);
 
-                    // 弹道射线（从相机中心检测，子弹从枪口发出）
-                    const aimDir = getAimDirection(camera);
-                    const hitEnemy = enemyManager.hitTest(shot.origin, aimDir);
+                    // 用屏幕准星射线检测敌人（相机中心→敌人）
+                    const hitEnemy = enemyManager.hitTest(camera.position, aimDir);
 
                     if (hitEnemy) {
-                        // 命中位置计算：从枪口沿瞄准方向到敌人
+                        // 命中位置：从枪口到敌人方向检测精确命中点
                         const hitPos = new THREE.Vector3();
                         const enemyBox = new THREE.Box3().setFromObject(hitEnemy.group);
                         const ray = new THREE.Ray(shot.origin, aimDir);
                         ray.intersectBox(enemyBox, hitPos);
 
                         if (hitPos.length() > 0) {
-                            // 命中特效（火花、弹孔、tracer）
                             const hitNorm = new THREE.Vector3(0, 1, 0);
                             weaponFx.onHit(hitPos, hitNorm, aimDir, shot.damage);
                         }
@@ -226,7 +242,6 @@ async function startGame() {
                             score += hitEnemy.cfg.score;
                             audio.playDeath();
 
-                            // 死亡火花特效
                             if (hitPos.length() > 0) {
                                 weaponFx.impactSpark.emit(
                                     hitEnemy.group.position.clone().add(new THREE.Vector3(0, 0.8, 0)),
@@ -234,18 +249,16 @@ async function startGame() {
                                 );
                             }
                         } else {
-                            score += 5; // 命中得分
+                            score += 5;
                             audio.playHit();
                         }
                     } else {
-                        // 未命中：在远处产生弹孔（对地面/建筑）
-                        // 用相机射线检测场景物体
+                        // 未命中：用相机射线检测场景物体
                         _raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
                         const intersects = _raycaster.intersectObjects(scene.children, true);
                         if (intersects.length > 0) {
                             const hitPoint = intersects[0].point;
                             const hitNormal = intersects[0].face?.normal || new THREE.Vector3(0, 1, 0);
-                            // 转换法线到世界空间
                             if (intersects[0].object) {
                                 const normalMatrix = new THREE.Matrix3().getNormalMatrix(
                                     intersects[0].object.matrixWorld

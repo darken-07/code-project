@@ -227,11 +227,21 @@ export class AudioManager {
 
   // 用于自定义MP3背景音乐
   setCustomMusic(url) {
-    // 保留接口：用户可以将MP3文件放入项目后调用
-    // const audio = new Audio(url);
-    // audio.loop = true;
-    // audio.volume = 0.3;
-    // audio.play();
+    // 用户可以将MP3文件放入 music/ 目录后调用
+    const audio = new Audio(url);
+    audio.loop = true;
+    audio.volume = 0.3;
+    // 暂停程序化音乐
+    this.stopMusic();
+    audio.play();
+    this._customAudio = audio;
+  }
+
+  stopCustomMusic() {
+    if (this._customAudio) {
+      this._customAudio.pause();
+      this._customAudio = null;
+    }
   }
 
   setVolume(type, val) {

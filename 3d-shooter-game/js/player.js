@@ -116,11 +116,11 @@ export class Player {
     buildPlayerModel() {
         const group = new THREE.Group();
 
-        // ---- 身体 ----
+        // ---- 身体（战术背心） ----
         const bodyMat = new THREE.MeshStandardMaterial({
-            color: 0x4488cc,
+            color: 0x336699,
             roughness: 0.7,
-            metalness: 0.2,
+            metalness: 0.3,
         });
         const body = new THREE.Mesh(
             new THREE.BoxGeometry(0.7, 0.8, 0.4),
@@ -131,7 +131,28 @@ export class Player {
         group.add(body);
         this.bodyMesh = body;
 
-        // ---- 头部 ----
+        // 战术背心细节（胸前口袋/装备带）
+        const vestMat = new THREE.MeshStandardMaterial({
+            color: 0x2a5a8a,
+            roughness: 0.8,
+            metalness: 0.1,
+        });
+        const vest = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.4, 0.05), vestMat);
+        vest.position.set(0, 1.25, 0.23);
+        group.add(vest);
+
+        // 腰带
+        const beltMat = new THREE.MeshStandardMaterial({
+            color: 0x333344,
+            roughness: 0.6,
+            metalness: 0.3,
+        });
+        const belt = new THREE.Mesh(new THREE.TorusGeometry(0.35, 0.04, 6, 12, Math.PI), beltMat);
+        belt.position.set(0, 0.85, 0);
+        belt.rotation.x = Math.PI / 2;
+        group.add(belt);
+
+        // ---- 头部（战术头盔） ----
         const headMat = new THREE.MeshStandardMaterial({
             color: 0xffccaa,
             roughness: 0.6,
@@ -145,6 +166,39 @@ export class Player {
         group.add(head);
         this.headMesh = head;
 
+        // 头盔
+        const helmetMat = new THREE.MeshStandardMaterial({
+            color: 0x445566,
+            roughness: 0.5,
+            metalness: 0.4,
+        });
+        const helmet = new THREE.Mesh(new THREE.SphereGeometry(0.25, 8, 8, 0, Math.PI * 2, 0, Math.PI / 2), helmetMat);
+        helmet.position.set(0, 1.76, 0);
+        helmet.scale.set(1, 0.6, 1.1);
+        group.add(helmet);
+
+        // 头盔护目镜
+        const visorMat = new THREE.MeshStandardMaterial({
+            color: 0x224466,
+            emissive: 0x4488cc,
+            emissiveIntensity: 0.05,
+            metalness: 0.8,
+            roughness: 0.2,
+        });
+        const visor = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.06, 0.02), visorMat);
+        visor.position.set(0, 1.72, -0.23);
+        group.add(visor);
+
+        // 头盔顶部灯
+        const lightMat = new THREE.MeshStandardMaterial({
+            color: 0x44ff44,
+            emissive: 0x44ff44,
+            emissiveIntensity: 0.5,
+        });
+        const helmLamp = new THREE.Mesh(new THREE.SphereGeometry(0.04, 6, 6), lightMat);
+        helmLamp.position.set(0, 1.92, 0.05);
+        group.add(helmLamp);
+
         // ---- 眼睛 ----
         const eyeMat = new THREE.MeshStandardMaterial({ color: 0x222222 });
         for (const side of [-1, 1]) {
@@ -156,17 +210,29 @@ export class Player {
             group.add(eye);
         }
 
-        // ---- 左臂 ----
+        // ---- 左臂（带护甲） ----
         const armMat = new THREE.MeshStandardMaterial({
-            color: 0xffccaa,
+            color: 0xccaa88,
             roughness: 0.7,
         });
+        const armorMat = new THREE.MeshStandardMaterial({
+            color: 0x445566,
+            roughness: 0.5,
+            metalness: 0.3,
+        });
+
         this.leftArm = new THREE.Mesh(
             new THREE.BoxGeometry(0.15, 0.55, 0.15),
             armMat
         );
         this.leftArm.position.set(-0.5, 1.15, 0);
         group.add(this.leftArm);
+
+        // 左肩甲
+        const leftPad = new THREE.Mesh(new THREE.SphereGeometry(0.12, 6, 6, 0, Math.PI * 2, 0, Math.PI / 2), armorMat);
+        leftPad.position.set(-0.5, 1.45, 0);
+        leftPad.scale.set(1.2, 0.5, 1.2);
+        group.add(leftPad);
 
         // ---- 右臂（持枪臂） ----
         this.rightArm = new THREE.Mesh(
@@ -175,6 +241,12 @@ export class Player {
         );
         this.rightArm.position.set(0.5, 1.15, 0);
         group.add(this.rightArm);
+
+        // 右肩甲
+        const rightPad = new THREE.Mesh(new THREE.SphereGeometry(0.12, 6, 6, 0, Math.PI * 2, 0, Math.PI / 2), armorMat);
+        rightPad.position.set(0.5, 1.45, 0);
+        rightPad.scale.set(1.2, 0.5, 1.2);
+        group.add(rightPad);
 
         // ---- 左腿 ----
         const legMat = new THREE.MeshStandardMaterial({
@@ -188,6 +260,17 @@ export class Player {
         this.leftLeg.position.set(-0.2, 0.27, 0);
         group.add(this.leftLeg);
 
+        // 左护膝
+        const kneeMat = new THREE.MeshStandardMaterial({
+            color: 0x555577,
+            metalness: 0.4,
+            roughness: 0.5,
+        });
+        const leftKnee = new THREE.Mesh(new THREE.SphereGeometry(0.08, 6, 4), kneeMat);
+        leftKnee.position.set(-0.2, 0.45, 0.12);
+        leftKnee.scale.set(0.8, 0.6, 0.5);
+        group.add(leftKnee);
+
         // ---- 右腿 ----
         this.rightLeg = new THREE.Mesh(
             new THREE.BoxGeometry(0.2, 0.55, 0.2),
@@ -195,6 +278,24 @@ export class Player {
         );
         this.rightLeg.position.set(0.2, 0.27, 0);
         group.add(this.rightLeg);
+
+        // 右护膝
+        const rightKnee = new THREE.Mesh(new THREE.SphereGeometry(0.08, 6, 4), kneeMat);
+        rightKnee.position.set(0.2, 0.45, 0.12);
+        rightKnee.scale.set(0.8, 0.6, 0.5);
+        group.add(rightKnee);
+
+        // ---- 军靴 ----
+        const bootMat = new THREE.MeshStandardMaterial({
+            color: 0x222222,
+            roughness: 0.9,
+        });
+        const leftBoot = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.12, 0.3), bootMat);
+        leftBoot.position.set(-0.2, 0.06, 0.05);
+        group.add(leftBoot);
+        const rightBoot = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.12, 0.3), bootMat);
+        rightBoot.position.set(0.2, 0.06, 0.05);
+        group.add(rightBoot);
 
         // 初始默认右臂指向正前方（持枪姿势）
         this.rightArm.rotation.x = -0.6;
@@ -338,10 +439,10 @@ export class Player {
         }
 
         // 枪械在右手的位置偏移（让枪在角色手上更明显）
-        gunGroup.position.set(0.4, 0.55, -0.35);
+        gunGroup.position.set(0.45, 1.1, -0.4);
         // 倾斜展示（枪口朝前略向下）
-        gunGroup.rotation.x = -0.25;
-        gunGroup.rotation.z = 0.2;
+        gunGroup.rotation.x = -0.3;
+        gunGroup.rotation.z = 0.15;
 
         this.gunModelOffset = gunGroup.position.clone();
     }
@@ -355,10 +456,10 @@ export class Player {
         const { dx, dy } = getMouseDelta();
         const sensitivity = 0.008; // 提高灵敏度
 
-        // 水平旋转玩家朝向（yaw）- 左右转
-        this.yaw -= dx * sensitivity;
+        // 水平旋转玩家朝向（yaw）- 鼠标往右移，视角向右转
+        this.yaw += dx * sensitivity;
 
-        // 垂直倾斜相机（pitch），只控制相机俯仰，范围放更大
+        // 垂直倾斜相机（pitch）- 鼠标往上移，视角向上
         this.pitch -= dy * sensitivity * 0.6;
         this.pitch = Math.max(0.05, Math.min(Math.PI / 2.5, this.pitch));
 
