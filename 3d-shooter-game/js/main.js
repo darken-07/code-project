@@ -29,6 +29,9 @@ let weatherManagerRef, weaponEffectsRef;
 const _raycaster = new THREE.Raycaster();
 const _crosshairTarget = new THREE.Vector3();
 
+// ===== 版本号（用于验证更新是否生效） =====
+const GAME_VERSION = 'v2.1.0 - 霓虹之夜';
+
 /**
  * 从相机中心发射射线，返回世界空间中的瞄准方向。
  * 用于第三人称：子弹从枪口发出，但方向由相机准星决定。
